@@ -1,0 +1,9 @@
+# view AndroidManifest.xml #generated:12
+-keep class jp.hiralab.halps.MainActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:21
+-keep class jp.hiralab.halps.SensorDataActivity { <init>(...); }
+
+# onClick res/layout/main.xml #generated:13
+-keepclassmembers class * { *** startSensorData(...); }
+
