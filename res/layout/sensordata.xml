@@ -9,12 +9,17 @@
     <TextView android:id="@+id/sensorinfo"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:textAllCaps="true"
     />
     <TextView android:id="@+id/accdata"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="(default text)"
+    />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Write data to file"
+        android:onClick="writeData"
     />
     <TextView android:id="@+id/gradata"
         android:layout_width="fill_parent"
