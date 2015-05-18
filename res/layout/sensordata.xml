@@ -16,5 +16,15 @@
         android:layout_height="wrap_content"
         android:text="(default text)"
     />
+    <TextView android:id="@+id/gradata"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="(default text)"
+    />
+    <TextView android:id="@+id/oridata"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="(default text)"
+    />
 
 </LinearLayout>
