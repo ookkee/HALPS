@@ -12,7 +12,10 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.method.KeyListener;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 public class SensorDataActivity extends Activity implements SensorEventListener
@@ -20,8 +23,8 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     private SensorManager mSensorManager;
     private Sensor mAccelerometer, mGravity, mOrientation;
     TextView vwAccData, vwGraData, vwOriData;
-    File fAcc, fGra, fOri;
-    String strAccFile;
+    String strAccFile, strGraFile, strOriFile;
+    boolean recording = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -71,11 +74,6 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         mSensorManager.registerListener(this, mOrientation, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
-        // Get files for writing data
-        if(isExternalStorageWritable()) {
-            fAcc = new File(getExternalFilesDir(null), "acc_test.csv");
-            vwSensorInfo.append("\next storg is writable!\n");
-        }
     }
 
     /** Checks if external storage is available for read and write */
@@ -85,6 +83,31 @@ public class SensorDataActivity extends Activity implements SensorEventListener
             return true;
         }
         return false;
+    }
+
+    /** Called when user clicks button_rec.
+     * Records data to string and records it to file */
+    public void recordData(View view) {
+        Button btn = (Button) findViewById(R.id.button_rec);
+        EditText fileNameInput = (EditText) findViewById(R.id.filenameinput);
+        if(recording) {
+            // Stop recording and write to file
+            String strFileName = new String(fileNameInput.getText().toString());
+            writeData(strFileName + "_acc.csv", strAccFile);
+            strAccFile = "";
+            writeData(strFileName + "_gra.csv", strGraFile);
+            strGraFile = "";
+            writeData(strFileName + "_ori.csv", strOriFile);
+            strOriFile = "";
+            fileNameInput.setKeyListener((KeyListener)fileNameInput.getTag());
+            btn.setText("Start");
+        }
+        else {
+            // Start recording
+            fileNameInput.setTag(fileNameInput.getKeyListener());
+            btn.setText("Stop");
+        }
+        recording = !recording;
     }
 
     @Override
@@ -102,26 +125,29 @@ public class SensorDataActivity extends Activity implements SensorEventListener
             strGraData += "x : " + event.values[0] + "\n";
             strGraData += "y : " + event.values[1] + "\n";
             strGraData += "z : " + event.values[2] + "\n";
-            strGraData += event.timestamp + ";" +
-                event.values[0] + ";" +
-                event.values[1] + ";" +
-                event.values[2] + "\n";
             vwGraData.setText(strGraData);
+
+            if(recording) {
+                strGraFile += event.timestamp + ";" +
+                    event.values[0] + ";" +
+                    event.values[1] + ";" +
+                    event.values[2] + "\n";
+            }
         }
         if(sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             String strAccData = new String("");
-            /*
             strAccData += "LINEAR ACCELERATION\n";
             strAccData += "x : " + event.values[0] + "\n";
             strAccData += "y : " + event.values[1] + "\n";
             strAccData += "z : " + event.values[2] + "\n";
-            */
-            strAccData = event.timestamp + ";" +
-                event.values[0] + ";" +
-                event.values[1] + ";" +
-                event.values[2] + "\n";
             vwAccData.setText(strAccData);
-            strAccFile += strAccData;
+
+            if(recording) {
+                strAccFile += event.timestamp + ";" +
+                    event.values[0] + ";" +
+                    event.values[1] + ";" +
+                    event.values[2] + "\n";
+            }
         }
         if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
             String strOriData = new String("");
@@ -130,6 +156,13 @@ public class SensorDataActivity extends Activity implements SensorEventListener
             strOriData += "y : " + event.values[1] + "\n";
             strOriData += "z : " + event.values[2] + "\n";
             vwOriData.setText(strOriData);
+
+            if(recording) {
+                strOriFile += event.timestamp + ";" +
+                    event.values[0] + ";" +
+                    event.values[1] + ";" +
+                    event.values[2] + "\n";
+            }
         }
         /*
         else {
@@ -153,18 +186,23 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         mSensorManager.unregisterListener(this);
     }
 
-    /** Called when user clicks write data button, writes sensor data to file */
-    public void writeData(View view) {
+    /** Writes data to external storage if available */
+    public void writeData(String filename, String data) {
 
-        try {
-            FileOutputStream f = new FileOutputStream(fAcc);
-            PrintWriter pw = new PrintWriter(f);
-            pw.print(strAccFile);
-            pw.flush();
-            pw.close();
-            f.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        // Get files for writing data
+        if(isExternalStorageWritable()) {
+            File f = new File(getExternalFilesDir(null), filename);
+            // Write data
+            try {
+                FileOutputStream fOutStream = new FileOutputStream(f);
+                PrintWriter pw = new PrintWriter(fOutStream);
+                pw.print(data);
+                pw.flush();
+                pw.close();
+                fOutStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

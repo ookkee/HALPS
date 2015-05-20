@@ -15,12 +15,14 @@
         android:layout_height="wrap_content"
         android:text="(default text)"
     />
+<!--
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Write data to file"
         android:onClick="writeData"
     />
+-->
     <TextView android:id="@+id/gradata"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -30,6 +32,17 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="(default text)"
+    />
+    <EditText android:id="@+id/filenameinput"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:hint="filename trunk"
+    />
+    <Button android:id="@+id/button_rec"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start"
+        android:onClick="recordData"
     />
 
 </LinearLayout>
