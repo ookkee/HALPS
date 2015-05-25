@@ -41,7 +41,8 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         // Query sensor services
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         List<Sensor> sensorList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        //mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         mGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
         mOrientation = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
@@ -126,7 +127,8 @@ public class SensorDataActivity extends Activity implements SensorEventListener
 
         Sensor sensor = event.sensor;
         if (sensor.getType() == Sensor.TYPE_GRAVITY ||
-                sensor.getType() == Sensor.TYPE_ACCELEROMETER ||
+                //sensor.getType() == Sensor.TYPE_ACCELEROMETER ||
+                sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION ||
                 sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)
         {
             String strSensorData = new String("");
@@ -141,7 +143,8 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                     event.values[2] + "\n";
 
             switch(sensor.getType()) {
-                case Sensor.TYPE_ACCELEROMETER:
+                //case Sensor.TYPE_ACCELEROMETER:
+                case Sensor.TYPE_LINEAR_ACCELERATION:
                     vwAccData.setText(strSensorData);
                     vwAccData.append(referenceTime + "\n");
                     vwAccData.append(event.timestamp + "\n");
