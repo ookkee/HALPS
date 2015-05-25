@@ -26,6 +26,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     String strFileName = new String("");
     boolean recording = false;
     long referenceTime;
+    float[] accMin,accMax;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -63,6 +64,9 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         if(isExternalStorageWritable())
             vwSensorInfo.append("\next storage is writable!\n");
 
+        // initialize min&max values for acceleration axes
+        accMin = new float[]{0,0,0};
+        accMax = new float[]{0,0,0};
         /*
         if (mAccelerometer != null) {
             // Found accelerometer!
@@ -145,10 +149,29 @@ public class SensorDataActivity extends Activity implements SensorEventListener
             switch(sensor.getType()) {
                 //case Sensor.TYPE_ACCELEROMETER:
                 case Sensor.TYPE_LINEAR_ACCELERATION:
+                    // Get biggest and smallest values for x,y,z
+                    for(int i=0; i < 3; i++) {
+                        if(event.values[i] < accMin[i])
+                            accMin[i] = event.values[i];
+                        else if(event.values[i] > accMax[i])
+                            accMax[i] = event.values[i];
+                    }
+                    // Print data on screen
                     vwAccData.setText(strSensorData);
                     vwAccData.append(referenceTime + "\n");
                     vwAccData.append(event.timestamp + "\n");
                     vwAccData.append((event.timestamp-referenceTime) + "\n");
+                    // Find largest spikes
+                    if(accMax[0]-accMin[0] > accMax[1]-accMin[1] &&
+                        accMax[0]-accMin[0] > accMax[2]-accMin[2])
+                        vwAccData.append("\nBiggest spikes on x-axis!\n");
+                    else if(accMax[1]-accMin[1] > accMax[0]-accMin[0] &&
+                        accMax[1]-accMin[1] > accMax[2]-accMin[2])
+                        vwAccData.append("\nBiggest spikes on y-axis!\n");
+                    else if(accMax[2]-accMin[2] > accMax[0]-accMin[0] &&
+                        accMax[2]-accMin[2] > accMax[1]-accMin[1])
+                        vwAccData.append("\nBiggest spikes on z-axis!\n");
+                    // Write data to string if recording
                     if(recording)
                         strAccFile += strSensorFile;
                     break;
