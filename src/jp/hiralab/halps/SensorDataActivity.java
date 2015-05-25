@@ -3,7 +3,10 @@ package jp.hiralab.halps;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.Activity;
 import android.hardware.Sensor;
@@ -26,12 +29,28 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     String strFileName = new String("");
     boolean recording = false;
     long referenceTime;
-    float[] accMin,accMax;
+    float[] accMin,accMax,previousValues;
+    double minThreshold = 1;
+    float sampleMin,sampleMax,threshold;
+    int sampleCounter, stepsTaken, spikingAxis;
+    Timer timer = new Timer();
+    TimerTask myTask = new TimerTask(){
+        @Override
+        public void run() {
+            // Reset the min&max values
+            for(int i=0;i<3;i++){
+                accMin[i] = 0;
+                accMax[i] = 0;
+            }
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sensordata);
+
+        timer.schedule(myTask, 10000, 10000);
 
         // Initialize views
         TextView vwSensorInfo = (TextView) findViewById(R.id.sensorinfo);
@@ -161,19 +180,53 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                     vwAccData.append(referenceTime + "\n");
                     vwAccData.append(event.timestamp + "\n");
                     vwAccData.append((event.timestamp-referenceTime) + "\n");
-                    // Find largest spikes
+                    // Find largest spikes that are over the minimum threshold
                     if(accMax[0]-accMin[0] > accMax[1]-accMin[1] &&
-                        accMax[0]-accMin[0] > accMax[2]-accMin[2])
+                        accMax[0]-accMin[0] > accMax[2]-accMin[2] &&
+                        accMax[0]-accMin[0] > minThreshold) {
                         vwAccData.append("\nBiggest spikes on x-axis!\n");
+                        spikingAxis = 0;
+                        if(previousValues != null &&
+                            previousValues[0] < threshold &&
+                            event.values[0] >= threshold) {
+                            stepsTaken += 1;
+                        }
+                    }
                     else if(accMax[1]-accMin[1] > accMax[0]-accMin[0] &&
-                        accMax[1]-accMin[1] > accMax[2]-accMin[2])
+                        accMax[1]-accMin[1] > accMax[2]-accMin[2] &&
+                        accMax[1]-accMin[1] > minThreshold) {
                         vwAccData.append("\nBiggest spikes on y-axis!\n");
+                        spikingAxis = 1;
+                        if(previousValues != null &&
+                            previousValues[1] < threshold &&
+                            event.values[1] >= threshold) {
+                            stepsTaken += 1;
+                        }
+                    }
                     else if(accMax[2]-accMin[2] > accMax[0]-accMin[0] &&
-                        accMax[2]-accMin[2] > accMax[1]-accMin[1])
+                        accMax[2]-accMin[2] > accMax[1]-accMin[1] &&
+                        accMax[2]-accMin[2] > minThreshold) {
                         vwAccData.append("\nBiggest spikes on z-axis!\n");
+                        spikingAxis = 2;
+                        if(previousValues != null &&
+                            previousValues[2] < threshold &&
+                            event.values[2] >= threshold) {
+                            stepsTaken += 1;
+                        }
+                    }
                     // Write data to string if recording
                     if(recording)
                         strAccFile += strSensorFile;
+                    // Sampling
+                    sampleCounter++;
+                    if(sampleCounter >= 20) {
+                        sampleMin = accMin[spikingAxis];
+                        sampleMax = accMax[spikingAxis];
+                        threshold = (sampleMin + sampleMax)/2;
+                        sampleCounter = 0;
+                    }
+                    vwAccData.append("\nSteps taken: " + stepsTaken + "\n");
+                    previousValues = Arrays.copyOf(event.values, event.values.length);
                     break;
                 case Sensor.TYPE_GRAVITY:
                     vwGraData.setText(strSensorData);
