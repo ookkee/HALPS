@@ -30,7 +30,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     boolean recording = false;
     long referenceTime;
     float[] accMin,accMax,previousValues;
-    double minThreshold = 1;
+    double minThreshold = 2;
     float sampleMin,sampleMax,threshold;
     int sampleCounter, stepsTaken, spikingAxis;
     Timer timer = new Timer();
@@ -274,6 +274,16 @@ public class SensorDataActivity extends Activity implements SensorEventListener
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+    /** Changes the minimum threshold */
+    public void changeMinimumThreshold(View view) {
+        EditText input = (EditText) findViewById(R.id.thresholdinput);
+        if(input.getText().toString() == null || input.getText().toString().isEmpty()) {
+            minThreshold = 1;
+        }
+        else {
+            minThreshold = Double.parseDouble(input.getText().toString());
         }
     }
 }
