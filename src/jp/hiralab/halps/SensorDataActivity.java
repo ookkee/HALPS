@@ -5,8 +5,6 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import android.app.Activity;
 import android.hardware.Sensor;
@@ -33,8 +31,8 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     double minThreshold = 2;
     float sampleMin,sampleMax,threshold;
     int sampleCounter, stepsTaken, spikingAxis;
-    Timer timer = new Timer();
-    TimerTask myTask = new TimerTask(){
+    //Timer timer = new Timer();
+    /*TimerTask myTask = new TimerTask(){
         @Override
         public void run() {
             // Reset the min&max values
@@ -43,14 +41,14 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                 accMax[i] = 0;
             }
         }
-    };
+    };*/
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sensordata);
 
-        timer.schedule(myTask, 10000, 10000);
+        //timer.schedule(myTask, 10000, 10000);
 
         // Initialize views
         TextView vwSensorInfo = (TextView) findViewById(R.id.sensorinfo);
@@ -101,6 +99,9 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         mSensorManager.registerListener(this, mOrientation, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
+        // Set spiking axis to non-axis
+        spikingAxis = 3;
+
     }
 
     /** Checks if external storage is available for read and write */
@@ -148,6 +149,83 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     @Override
     public void onSensorChanged(SensorEvent event) {
 
+        displayData(event);
+        Sensor sensor = event.sensor;
+        if(sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+
+            // Get biggest and smallest values for x,y,z
+            for(int i=0; i < 3; i++) {
+                if(event.values[i] < accMin[i])
+                    accMin[i] = event.values[i];
+                else if(event.values[i] > accMax[i])
+                    accMax[i] = event.values[i];
+            }
+            /*
+            // Find largest spikes that are over the minimum threshold
+            if(accMax[0]-accMin[0] > accMax[1]-accMin[1] &&
+                accMax[0]-accMin[0] > accMax[2]-accMin[2] &&
+                accMax[0]-accMin[0] > minThreshold) {
+                vwAccData.append("\nBiggest spikes on x-axis!\n");
+                spikingAxis = 0;
+            }
+            else if(accMax[1]-accMin[1] > accMax[0]-accMin[0] &&
+                accMax[1]-accMin[1] > accMax[2]-accMin[2] &&
+                accMax[1]-accMin[1] > minThreshold) {
+                vwAccData.append("\nBiggest spikes on y-axis!\n");
+                spikingAxis = 1;
+            }
+            else if(accMax[2]-accMin[2] > accMax[0]-accMin[0] &&
+                accMax[2]-accMin[2] > accMax[1]-accMin[1] &&
+                accMax[2]-accMin[2] > minThreshold) {
+                vwAccData.append("\nBiggest spikes on z-axis!\n");
+                spikingAxis = 2;
+            }
+            */
+            if(spikingAxis != 3) {
+                if(previousValues != null &&
+                        previousValues[spikingAxis] < threshold &&
+                        event.values[spikingAxis] >= threshold &&
+                        (event.values[spikingAxis] - previousValues[spikingAxis]) > 0.3)
+                    stepsTaken += 1;
+            }
+
+            // Sampling
+            sampleCounter++;
+            if(sampleCounter >= 50) {
+                double[] diff = new double[3];
+                for(int i=0;i<3;i++) 
+                    diff[i] = accMax[i] - accMin[i];
+                if(diff[0] > diff[1] && diff[0] > diff[2] &&
+                        diff[0] > minThreshold)
+                    spikingAxis = 0;
+                else if(diff[1] > diff[0] && diff[1] > diff[2] &&
+                        diff[1] > minThreshold)
+                    spikingAxis = 1;
+                else if(diff[2] > diff[0] && diff[2] > diff[1] &&
+                        diff[2] > minThreshold)
+                    spikingAxis = 2;
+                else
+                    spikingAxis = 3;
+                if(spikingAxis != 3) {
+                    sampleMin = accMin[spikingAxis];
+                    sampleMax = accMax[spikingAxis];
+                    threshold = (sampleMin + sampleMax)/2;
+                }
+                for(int i=0;i<3;i++) {
+                    accMin[i] = 0;
+                    accMax[i] = 0;
+                }
+                sampleCounter = 0;
+            }
+            vwAccData.append("\nSteps taken: " + stepsTaken + "\n");
+            previousValues = Arrays.copyOf(event.values, event.values.length);
+        }
+
+    }
+
+    /** Prints data of sensors to screen */
+    public void displayData(SensorEvent event) {
+
         Sensor sensor = event.sensor;
         if (sensor.getType() == Sensor.TYPE_GRAVITY ||
                 //sensor.getType() == Sensor.TYPE_ACCELEROMETER ||
@@ -168,65 +246,14 @@ public class SensorDataActivity extends Activity implements SensorEventListener
             switch(sensor.getType()) {
                 //case Sensor.TYPE_ACCELEROMETER:
                 case Sensor.TYPE_LINEAR_ACCELERATION:
-                    // Get biggest and smallest values for x,y,z
-                    for(int i=0; i < 3; i++) {
-                        if(event.values[i] < accMin[i])
-                            accMin[i] = event.values[i];
-                        else if(event.values[i] > accMax[i])
-                            accMax[i] = event.values[i];
-                    }
                     // Print data on screen
                     vwAccData.setText(strSensorData);
                     vwAccData.append(referenceTime + "\n");
                     vwAccData.append(event.timestamp + "\n");
                     vwAccData.append((event.timestamp-referenceTime) + "\n");
-                    // Find largest spikes that are over the minimum threshold
-                    if(accMax[0]-accMin[0] > accMax[1]-accMin[1] &&
-                        accMax[0]-accMin[0] > accMax[2]-accMin[2] &&
-                        accMax[0]-accMin[0] > minThreshold) {
-                        vwAccData.append("\nBiggest spikes on x-axis!\n");
-                        spikingAxis = 0;
-                        if(previousValues != null &&
-                            previousValues[0] < threshold &&
-                            event.values[0] >= threshold) {
-                            stepsTaken += 1;
-                        }
-                    }
-                    else if(accMax[1]-accMin[1] > accMax[0]-accMin[0] &&
-                        accMax[1]-accMin[1] > accMax[2]-accMin[2] &&
-                        accMax[1]-accMin[1] > minThreshold) {
-                        vwAccData.append("\nBiggest spikes on y-axis!\n");
-                        spikingAxis = 1;
-                        if(previousValues != null &&
-                            previousValues[1] < threshold &&
-                            event.values[1] >= threshold) {
-                            stepsTaken += 1;
-                        }
-                    }
-                    else if(accMax[2]-accMin[2] > accMax[0]-accMin[0] &&
-                        accMax[2]-accMin[2] > accMax[1]-accMin[1] &&
-                        accMax[2]-accMin[2] > minThreshold) {
-                        vwAccData.append("\nBiggest spikes on z-axis!\n");
-                        spikingAxis = 2;
-                        if(previousValues != null &&
-                            previousValues[2] < threshold &&
-                            event.values[2] >= threshold) {
-                            stepsTaken += 1;
-                        }
-                    }
                     // Write data to string if recording
                     if(recording)
                         strAccFile += strSensorFile;
-                    // Sampling
-                    sampleCounter++;
-                    if(sampleCounter >= 20) {
-                        sampleMin = accMin[spikingAxis];
-                        sampleMax = accMax[spikingAxis];
-                        threshold = (sampleMin + sampleMax)/2;
-                        sampleCounter = 0;
-                    }
-                    vwAccData.append("\nSteps taken: " + stepsTaken + "\n");
-                    previousValues = Arrays.copyOf(event.values, event.values.length);
                     break;
                 case Sensor.TYPE_GRAVITY:
                     vwGraData.setText(strSensorData);
@@ -240,7 +267,6 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                     break;
             }
         }
-
     }
 
     @Override
@@ -255,6 +281,9 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
+        //mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        //mSensorManager.registerListener(this, mGravity, SensorManager.SENSOR_DELAY_NORMAL);
+        //mSensorManager.registerListener(this, mOrientation, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     /** Writes data to external storage if available */
