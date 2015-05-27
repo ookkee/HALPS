@@ -25,6 +25,18 @@
         android:text="Change"
         android:onClick="changeMinimumThreshold"
     />
+    <EditText android:id="@+id/intervalinput"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:hint="sampling interval (int)"
+    />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Change"
+        android:onClick="changeSampleInterval"
+    />
 <!--
     <Button
         android:layout_width="wrap_content"

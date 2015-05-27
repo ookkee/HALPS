@@ -30,7 +30,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     float[] accMin,accMax,previousValues;
     double minThreshold = 2;
     float sampleMin,sampleMax,threshold;
-    int sampleCounter, stepsTaken, spikingAxis;
+    int sampleCounter, sampleInterval, stepsTaken, spikingAxis;
     //Timer timer = new Timer();
     /*TimerTask myTask = new TimerTask(){
         @Override
@@ -101,6 +101,9 @@ public class SensorDataActivity extends Activity implements SensorEventListener
 
         // Set spiking axis to non-axis
         spikingAxis = 3;
+        // Sampling variables
+        sampleCounter = 0;
+        sampleInterval = 50;
 
     }
 
@@ -190,7 +193,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
 
             // Sampling
             sampleCounter++;
-            if(sampleCounter >= 50) {
+            if(sampleCounter >= sampleInterval) {
                 double[] diff = new double[3];
                 for(int i=0;i<3;i++) 
                     diff[i] = accMax[i] - accMin[i];
@@ -312,6 +315,16 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         }
         else {
             minThreshold = Double.parseDouble(input.getText().toString());
+        }
+    }
+    /** Changes the sampling interval */
+    public void changeSampleInterval(View view) {
+        EditText input = (EditText) findViewById(R.id.intervalinput);
+        if(input.getText().toString() == null || input.getText().toString().isEmpty()) {
+            sampleInterval = 50;
+        }
+        else {
+            sampleInterval = Integer.parseInt(input.getText().toString());
         }
     }
 }
