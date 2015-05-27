@@ -183,9 +183,8 @@ public class SensorDataActivity extends Activity implements SensorEventListener
             */
             if(spikingAxis != 3) {
                 if(previousValues != null &&
-                        previousValues[spikingAxis] < threshold &&
-                        event.values[spikingAxis] >= threshold &&
-                        (event.values[spikingAxis] - previousValues[spikingAxis]) > 0.3)
+                        event.values[spikingAxis] < threshold &&
+                        (previousValues[spikingAxis] - event.values[spikingAxis]) > 0.3)
                     stepsTaken += 1;
             }
 
