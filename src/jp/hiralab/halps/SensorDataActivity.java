@@ -28,8 +28,9 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     boolean recording = false;
     long referenceTime;
     float[] accMin,accMax,previousValues;
-    double minThreshold = 2;
+    double minThreshold, minRelevantAcc;
     float sampleMin,sampleMax,threshold;
+    float oldRelevantValue,newRelevantValue;
     int sampleCounter, sampleInterval, stepsTaken, spikingAxis;
     //Timer timer = new Timer();
     /*TimerTask myTask = new TimerTask(){
@@ -99,11 +100,16 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         mSensorManager.registerListener(this, mOrientation, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
+        minThreshold = 1.5;
         // Set spiking axis to non-axis
         spikingAxis = 3;
         // Sampling variables
         sampleCounter = 0;
         sampleInterval = 50;
+        // Set relevant values
+        oldRelevantValue = 0;
+        newRelevantValue = 0;
+        minRelevantAcc = 1.5;
 
     }
 
@@ -184,42 +190,62 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                 spikingAxis = 2;
             }
             */
+            ////// RELEVANT CHANGES IN VALUES //////
+            oldRelevantValue = newRelevantValue;
+            if(spikingAxis != 3) {
+                vwAccData.append("cur-oldrel = " + Math.abs(event.values[spikingAxis]-oldRelevantValue) + "\n");
+                if(Math.abs(event.values[spikingAxis] - oldRelevantValue) >= minRelevantAcc)
+                    newRelevantValue = event.values[spikingAxis];
+                vwAccData.append("Old rel: " + oldRelevantValue + "\nNew rel: " + newRelevantValue + "\n");
+            }
+
+            ////// CALCULATE STEPS //////
+            if(oldRelevantValue > threshold && newRelevantValue < threshold)
+                stepsTaken += 1;
+
+            /*
             if(spikingAxis != 3) {
                 if(previousValues != null &&
                         event.values[spikingAxis] < threshold &&
                         (previousValues[spikingAxis] - event.values[spikingAxis]) > 0.3)
                     stepsTaken += 1;
             }
+            */
 
-            // Sampling
+            ////// SAMPLING //////
             sampleCounter++;
             if(sampleCounter >= sampleInterval) {
                 double[] diff = new double[3];
+                // Get difference between min & max for each axis
                 for(int i=0;i<3;i++) 
                     diff[i] = accMax[i] - accMin[i];
                 if(diff[0] > diff[1] && diff[0] > diff[2] &&
                         diff[0] > minThreshold)
-                    spikingAxis = 0;
+                    spikingAxis = 0; // x is spiking
                 else if(diff[1] > diff[0] && diff[1] > diff[2] &&
                         diff[1] > minThreshold)
-                    spikingAxis = 1;
+                    spikingAxis = 1; // y is spiking
                 else if(diff[2] > diff[0] && diff[2] > diff[1] &&
                         diff[2] > minThreshold)
-                    spikingAxis = 2;
+                    spikingAxis = 2; // z is spiking
                 else
-                    spikingAxis = 3;
+                    spikingAxis = 3; // no axis is spiking over the min threshold
                 if(spikingAxis != 3) {
+                    // Assign dynamic threshold
                     sampleMin = accMin[spikingAxis];
                     sampleMax = accMax[spikingAxis];
                     threshold = (sampleMin + sampleMax)/2;
                 }
                 for(int i=0;i<3;i++) {
+                    // re-init min & max for all axes
                     accMin[i] = 0;
                     accMax[i] = 0;
                 }
+                // re-init sampling time
                 sampleCounter = 0;
             }
             vwAccData.append("\nSteps taken: " + stepsTaken + "\n");
+            vwAccData.append("\nSpiking axis: " + spikingAxis + "\n");
             previousValues = Arrays.copyOf(event.values, event.values.length);
         }
 
@@ -311,7 +337,8 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     public void changeMinimumThreshold(View view) {
         EditText input = (EditText) findViewById(R.id.thresholdinput);
         if(input.getText().toString() == null || input.getText().toString().isEmpty()) {
-            minThreshold = 1;
+            // Do nothing
+            //minThreshold = 1;
         }
         else {
             minThreshold = Double.parseDouble(input.getText().toString());
@@ -321,10 +348,26 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     public void changeSampleInterval(View view) {
         EditText input = (EditText) findViewById(R.id.intervalinput);
         if(input.getText().toString() == null || input.getText().toString().isEmpty()) {
-            sampleInterval = 50;
+            // Do nothing
+            //sampleInterval = 50;
         }
         else {
             sampleInterval = Integer.parseInt(input.getText().toString());
         }
+    }
+    /** Changes the minimum relevant acceleration change */
+    public void changeRelevantAcc(View view) {
+        EditText input = (EditText) findViewById(R.id.relevantaccinput);
+        if(input.getText().toString() == null || input.getText().toString().isEmpty()) {
+            // Do nothing
+            //minRelevantAcc = 1.5;
+        }
+        else {
+            minRelevantAcc = Double.parseDouble(input.getText().toString());
+        }
+    }
+    /** Resets the step count */
+    public void resetStepCount(View view) {
+        stepsTaken = 0;
     }
 }

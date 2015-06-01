@@ -13,30 +13,66 @@
         android:layout_height="wrap_content"
         android:text="(default text)"
     />
-    <EditText android:id="@+id/thresholdinput"
-        android:layout_width="320dp"
-        android:layout_height="wrap_content"
-        android:hint="minimum threshold (double)"
-    />
-
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Change"
-        android:onClick="changeMinimumThreshold"
+        android:text="Reset step count"
+        android:onClick="resetStepCount"
     />
-    <EditText android:id="@+id/intervalinput"
-        android:layout_width="320dp"
-        android:layout_height="wrap_content"
-        android:hint="sampling interval (int)"
-    />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Change"
-        android:onClick="changeSampleInterval"
-    />
+        <EditText android:id="@+id/thresholdinput"
+            android:layout_weight="1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:hint="minimum threshold (double)"
+        />
+        <Button
+            android:layout_toLeftOf="@+id/thresholdinput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change"
+            android:onClick="changeMinimumThreshold"
+        />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <EditText android:id="@+id/intervalinput"
+            android:layout_weight="1"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:hint="sampling interval (int)"
+        />
+        <Button
+            android:layout_toLeftOf="@+id/intervalinput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change"
+            android:onClick="changeSampleInterval"
+        />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <EditText android:id="@+id/relevantaccinput"
+            android:layout_weight="1"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:hint="relevant acceleration (double)"
+        />
+        <Button
+            android:layout_toLeftOf="@+id/relevantaccinput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change"
+            android:onClick="changeRelevantAcc"
+        />
+    </LinearLayout>
 <!--
     <Button
         android:layout_width="wrap_content"
@@ -46,16 +82,19 @@
     />
 -->
     <TextView android:id="@+id/gradata"
+        android:layout_weight="1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="(default text)"
     />
     <TextView android:id="@+id/oridata"
+        android:layout_weight="1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="(default text)"
     />
     <EditText android:id="@+id/filenameinput"
+        android:layout_weight="1"
         android:layout_width="320dp"
         android:layout_height="wrap_content"
         android:hint="filename trunk"
@@ -67,6 +106,7 @@
         android:onClick="recordData"
     />
     <TextView android:id="@+id/sensorinfo"
+        android:layout_weight="1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
     />
