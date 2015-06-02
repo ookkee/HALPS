@@ -169,40 +169,44 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                 else if(event.values[i] > accMax[i])
                     accMax[i] = event.values[i];
             }
-            /*
             // Find largest spikes that are over the minimum threshold
             if(accMax[0]-accMin[0] > accMax[1]-accMin[1] &&
                 accMax[0]-accMin[0] > accMax[2]-accMin[2] &&
                 accMax[0]-accMin[0] > minThreshold) {
-                vwAccData.append("\nBiggest spikes on x-axis!\n");
+                //vwAccData.append("\nBiggest spikes on x-axis!\n");
                 spikingAxis = 0;
             }
             else if(accMax[1]-accMin[1] > accMax[0]-accMin[0] &&
                 accMax[1]-accMin[1] > accMax[2]-accMin[2] &&
                 accMax[1]-accMin[1] > minThreshold) {
-                vwAccData.append("\nBiggest spikes on y-axis!\n");
+                //vwAccData.append("\nBiggest spikes on y-axis!\n");
                 spikingAxis = 1;
             }
             else if(accMax[2]-accMin[2] > accMax[0]-accMin[0] &&
                 accMax[2]-accMin[2] > accMax[1]-accMin[1] &&
                 accMax[2]-accMin[2] > minThreshold) {
-                vwAccData.append("\nBiggest spikes on z-axis!\n");
+                //vwAccData.append("\nBiggest spikes on z-axis!\n");
                 spikingAxis = 2;
             }
-            */
             ////// RELEVANT CHANGES IN VALUES //////
             oldRelevantValue = newRelevantValue;
             if(spikingAxis != 3) {
-                vwAccData.append("cur-oldrel = " + Math.abs(event.values[spikingAxis]-oldRelevantValue) + "\n");
                 if(Math.abs(event.values[spikingAxis] - oldRelevantValue) >= minRelevantAcc)
                     newRelevantValue = event.values[spikingAxis];
                 vwAccData.append("Old rel: " + oldRelevantValue + "\nNew rel: " + newRelevantValue + "\n");
             }
 
             ////// CALCULATE STEPS //////
-            if(oldRelevantValue > threshold && newRelevantValue < threshold)
-                stepsTaken += 1;
+            //if(oldRelevantValue > threshold && newRelevantValue < threshold)
+            //    stepsTaken += 1;
 
+            if(spikingAxis != 3 && previousValues != null) {
+                if(previousValues[spikingAxis] > threshold &&
+                    event.values[spikingAxis] < threshold &&
+                    Math.abs(event.values[spikingAxis] - previousValues[spikingAxis]) >= minRelevantAcc) {
+                    stepsTaken += 1;
+                }
+            }
             /*
             if(spikingAxis != 3) {
                 if(previousValues != null &&
@@ -215,6 +219,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
             ////// SAMPLING //////
             sampleCounter++;
             if(sampleCounter >= sampleInterval) {
+                /*
                 double[] diff = new double[3];
                 // Get difference between min & max for each axis
                 for(int i=0;i<3;i++) 
@@ -230,6 +235,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                     spikingAxis = 2; // z is spiking
                 else
                     spikingAxis = 3; // no axis is spiking over the min threshold
+                */
                 if(spikingAxis != 3) {
                     // Assign dynamic threshold
                     sampleMin = accMin[spikingAxis];
@@ -276,9 +282,10 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                 case Sensor.TYPE_LINEAR_ACCELERATION:
                     // Print data on screen
                     vwAccData.setText(strSensorData);
-                    vwAccData.append(referenceTime + "\n");
-                    vwAccData.append(event.timestamp + "\n");
-                    vwAccData.append((event.timestamp-referenceTime) + "\n");
+                    vwAccData.append("time: " + event.timestamp + "\n");
+                    vwAccData.append("min threshold: " + minThreshold + "\n");
+                    vwAccData.append("sampling interval: " + sampleInterval + "\n");
+                    vwAccData.append("min rel acc: " + minRelevantAcc + "\n");
                     // Write data to string if recording
                     if(recording)
                         strAccFile += strSensorFile;
