@@ -73,6 +73,43 @@
             android:onClick="changeRelevantAcc"
         />
     </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+        <Button
+            android:id="@+id/delaynormal"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"
+            android:layout_width="0dip"
+            android:text="Normal"
+            android:onClick="changeSensorDelay"
+        />
+        <Button
+            android:id="@+id/delayui"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"
+            android:layout_width="0dip"
+            android:text="UI"
+            android:textColor="#00FFFF"
+            android:onClick="changeSensorDelay"
+        />
+        <Button
+            android:id="@+id/delaygame"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"
+            android:layout_width="0dip"
+            android:text="Game"
+            android:onClick="changeSensorDelay"
+        />
+        <Button
+            android:id="@+id/delayfastest"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"
+            android:layout_width="0dip"
+            android:text="Fastest"
+            android:onClick="changeSensorDelay"
+        />
+    </LinearLayout>
 <!--
     <Button
         android:layout_width="wrap_content"
@@ -88,6 +125,12 @@
         android:text="(default text)"
     />
     <TextView android:id="@+id/oridata"
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="(default text)"
+    />
+    <TextView android:id="@+id/gyrdata"
         android:layout_weight="1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
