@@ -3,7 +3,9 @@ package jp.hiralab.halps;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import android.app.Activity;
 import android.graphics.Color;
@@ -25,7 +27,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     private SensorManager mSensorManager;
     String strFileNameTrunk = new String("");
     String strVerAcc = new String("");
-    boolean recording = false;
+    boolean recording, peak, valley = false;
     long recStartTime;
     float[] previousValues;
     double minThreshold, minRelevantAcc;
@@ -34,7 +36,10 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     float oldRelevantValue,newRelevantValue;
     int sampleCounter, sampleInterval, stepsTaken, spikingAxis;
     private static int sensorDelay = SensorManager.SENSOR_DELAY_UI;
-    MySensor[] mySensors = new MySensor[5];
+    MySensor[] mySensors = new MySensor[4];
+    Queue<float[]> slopeQueue = new LinkedList<float[]>();
+    float minSlope = 2.0f;
+    TextView vwSensorInfo;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -42,7 +47,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         setContentView(R.layout.sensordata);
 
         // Initialize views
-        TextView vwSensorInfo = (TextView) findViewById(R.id.sensorinfo);
+        vwSensorInfo = (TextView) findViewById(R.id.sensorinfo);
 
         // Query sensor services
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -72,6 +77,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         }
         else 
             vwSensorInfo.append("No sensor for rotation!\n");
+        /*
         if(mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
             mySensors[3] = new MySensor(
                         (TextView) findViewById(R.id.gyrdata),
@@ -80,11 +86,12 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         }
         else 
             vwSensorInfo.append("No sensor for gyroscope!\n");
+        */
 
         // pseudo-sensor: vertical acceleration - using gravity and accelerometer
         // for now
-        mySensors[4] = new MySensor((TextView) findViewById(R.id.veraccdata));
-        mySensors[4].name = "verticalacceleration";
+        mySensors[3] = new MySensor((TextView) findViewById(R.id.veraccdata));
+        mySensors[3].name = "verticalacceleration";
 
         // Print list of sensors
         String strSensorList = new String("");
@@ -161,6 +168,32 @@ public class SensorDataActivity extends Activity implements SensorEventListener
 
     }
 
+    public void stepCalculation() {
+        float[] newSlopeData = new float[2];
+        newSlopeData[0] = mySensors[3].currentTime;
+        newSlopeData[1] = mySensors[3].currentValues[0] +
+            mySensors[3].currentValues[1] +
+            mySensors[3].currentValues[2];
+        slopeQueue.add(newSlopeData);
+        if(slopeQueue.size() >= 5) {
+            //slope = (y2-y1)/(x2-x1)
+            float[] oldSlopeData = slopeQueue.remove();
+            float slope = (newSlopeData[1]-oldSlopeData[1])/(newSlopeData[0]-oldSlopeData[1]);
+            if(Math.abs(slope) >= minSlope) {
+                if(Math.signum(slope) > 0)
+                    peak = true;
+                else if(Math.signum(slope) < 0)
+                    valley = true;
+                if(peak && valley) {
+                    stepsTaken += 1;
+                    peak = false;
+                    valley = false;
+                    vwSensorInfo.setText("Steps taken: " + stepsTaken + "\n");
+                }
+            }
+        }
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
 
@@ -173,10 +206,15 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                     mySensors[i].newValues(event.timestamp - recStartTime, event.values, recording);
             }
             else {
-                float[] verticalValues = mySensors[0].currentValues;
-                for(int j=0; i<3; i++)
-                    verticalValues[j] *= (mySensors[1].currentValues[j] / 9.81);
-                mySensors[i].newValues(event.timestamp - recStartTime, verticalValues, recording);
+                // Do after all sensor events have been called (in this case
+                // gravity)
+                if(event.sensor.getType() == Sensor.TYPE_GRAVITY) {
+                    float[] verticalValues = new float[3];
+                    for(int j=0; j<3; j++)
+                        verticalValues[j] = (mySensors[1].currentValues[j] / 9.81f) * mySensors[0].currentValues[j];
+                    mySensors[i].newValues(event.timestamp - recStartTime, verticalValues, recording);
+                    stepCalculation();
+                }
             }
         }
 

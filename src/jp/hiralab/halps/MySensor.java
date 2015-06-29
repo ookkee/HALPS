@@ -9,6 +9,7 @@ public class MySensor {
     private Sensor sensor;
     private float[] min, max;
     public float[] currentValues;
+    public float currentTime;
 
     // data displaying related variables
     private TextView tv;
@@ -47,7 +48,8 @@ public class MySensor {
 
     public void newValues(float time, float[] val, boolean recording) {
 
-        currentValues = lowPassFilter(val, currentValues);
+        currentValues = val;
+        currentTime = time;
 
         //check min and max values
         setMin(val);
