@@ -34,7 +34,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     float oldRelevantValue,newRelevantValue;
     int sampleCounter, sampleInterval, stepsTaken, spikingAxis;
     private static int sensorDelay = SensorManager.SENSOR_DELAY_UI;
-    MySensor[] mySensors = new MySensor[4];
+    MySensor[] mySensors = new MySensor[5];
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -50,32 +50,41 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         // Populate list with wanted sensors and their associated text view
         if(mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) != null) {
             mySensors[0] = new MySensor(
-                        mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
-                        (TextView) findViewById(R.id.accdata));
+                        (TextView) findViewById(R.id.accdata),
+                        mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION));
+            mySensors[0].name = "linear acceleration";
         }
         else 
             vwSensorInfo.append("No sensor for linear acc!\n");
         if(mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) != null) {
             mySensors[1] = new MySensor(
-                        mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY),
-                        (TextView) findViewById(R.id.gradata));
+                        (TextView) findViewById(R.id.gradata),
+                        mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY));
+            mySensors[1].name = "gravity";
         }
         else 
             vwSensorInfo.append("No sensor for gravity!\n");
         if(mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) != null) {
             mySensors[2] = new MySensor(
-                        mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
-                        (TextView) findViewById(R.id.oridata));
+                        (TextView) findViewById(R.id.oridata),
+                        mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR));
+            mySensors[2].name = "rotationvector";
         }
         else 
             vwSensorInfo.append("No sensor for rotation!\n");
         if(mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
             mySensors[3] = new MySensor(
-                        mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
-                        (TextView) findViewById(R.id.gyrdata));
+                        (TextView) findViewById(R.id.gyrdata),
+                        mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE));
+            mySensors[3].name = "gyroscope";
         }
         else 
             vwSensorInfo.append("No sensor for gyroscope!\n");
+
+        // pseudo-sensor: vertical acceleration - using gravity and accelerometer
+        // for now
+        mySensors[4] = new MySensor((TextView) findViewById(R.id.veraccdata));
+        mySensors[4].name = "verticalacceleration";
 
         // Print list of sensors
         String strSensorList = new String("");
@@ -123,7 +132,8 @@ public class SensorDataActivity extends Activity implements SensorEventListener
             // Stop recording and write to file
             //write the files & reset the recording variables
             for(MySensor mySensor : mySensors) {
-                writeData(mySensor.getFilename(), mySensor.getCsv());
+                writeData(mySensor.getFilename(), mySensor.getCsv(false));
+                writeData("f_" + mySensor.getFilename(), mySensor.getCsv(true));
                 mySensor.resetCsv();
             }
             //reset the ui & values
@@ -154,13 +164,23 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     @Override
     public void onSensorChanged(SensorEvent event) {
 
+        // The order of sensors calling this event is accelerometer, gravity &
+        // linear acceleration respectively
         Sensor sensor = event.sensor;
-        for(MySensor mySensor : mySensors) {
-            if(mySensor.getSensor().getType() == event.sensor.getType())
-                // Display the new data
-                mySensor.newValues(event.timestamp - recStartTime, event.values, recording);
+        for(int i=0; i<mySensors.length; i++) {
+            if(mySensors[i].getSensor() != null) {
+                if(mySensors[i].getSensor().getType() == event.sensor.getType())
+                    mySensors[i].newValues(event.timestamp - recStartTime, event.values, recording);
+            }
+            else {
+                float[] verticalValues = mySensors[0].currentValues;
+                for(int j=0; i<3; i++)
+                    verticalValues[j] *= (mySensors[1].currentValues[j] / 9.81);
+                mySensors[i].newValues(event.timestamp - recStartTime, verticalValues, recording);
+            }
         }
 
+        /*
         if(sensor.getType() == Sensor.TYPE_GRAVITY) {
             if(event.values[0] > event.values[1] &&
                     event.values[0] > event.values[2])
@@ -177,6 +197,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
             for(int i=0;i<3;i++)
                 gravity[i] = event.values[i] / 9.81;
         }
+        */
         if(sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
             // Get biggest and smallest values for x,y,z
@@ -211,6 +232,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                 spikingAxis = 2;
             }
             */
+            /*
             ////// RELEVANT CHANGES IN VALUES //////
             oldRelevantValue = newRelevantValue;
             if(spikingAxis != 3) {
@@ -218,11 +240,12 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                     newRelevantValue = event.values[spikingAxis];
                 //vwAccData.append("Old rel: " + oldRelevantValue + "\nNew rel: " + newRelevantValue + "\n");
             }
-
+            */
             ////// CALCULATE STEPS //////
             //if(oldRelevantValue > threshold && newRelevantValue < threshold)
             //    stepsTaken += 1;
 
+            /*
             if(spikingAxis != 3 && previousValues != null) {
                 if(previousValues[spikingAxis] > threshold &&
                     event.values[spikingAxis] < threshold &&
@@ -230,6 +253,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
                     stepsTaken += 1;
                 }
             }
+            */
             /*
             if(spikingAxis != 3) {
                 if(previousValues != null &&
@@ -279,62 +303,6 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         }
 
     }
-    /** Prints data of sensors to screen */
-    /*
-    public void displayData(SensorEvent event) {
-
-        Sensor sensor = event.sensor;
-        for(MySensor mySensor : mySensors) {
-        }
-        if (sensor.getType() == Sensor.TYPE_GRAVITY ||
-                //sensor.getType() == Sensor.TYPE_ACCELEROMETER ||
-                sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION ||
-                sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)
-        {
-            String strSensorData = new String("");
-            String strSensorFile = new String("");
-            strSensorData += sensor.getName() + "\n";
-            strSensorData += "x : " + event.values[0] + "\n";
-            strSensorData += "y : " + event.values[1] + "\n";
-            strSensorData += "z : " + event.values[2] + "\n";
-            strSensorFile += (event.timestamp - recStartTime) + ";" +
-                    event.values[0] + ";" +
-                    event.values[1] + ";" +
-                    event.values[2] + "\n";
-
-            switch(sensor.getType()) {
-                //case Sensor.TYPE_ACCELEROMETER:
-                case Sensor.TYPE_LINEAR_ACCELERATION:
-                    // Print data on screen
-                    vwAccData.setText(strSensorData);
-                    vwAccData.append("time: " + event.timestamp + "\n");
-                    vwAccData.append("min threshold: " + minThreshold + "\n");
-                    vwAccData.append("sampling interval: " + sampleInterval + "\n");
-                    vwAccData.append("min rel acc: " + minRelevantAcc + "\n");
-                    // Write data to string if recording
-                    if(recording) {
-                        strVerAcc += (event.timestamp - recStartTime) + ";" +
-                            acceleration[0] + ";" +
-                            acceleration[1] + ";" +
-                            acceleration[2] + "\n"; 
-
-                        strAccFile += strSensorFile;
-                    }
-                    break;
-                case Sensor.TYPE_GRAVITY:
-                    vwGraData.setText(strSensorData);
-                    if(recording)
-                        strGraFile += strSensorFile;
-                    break;
-                case Sensor.TYPE_ROTATION_VECTOR:
-                    vwOriData.setText(strSensorData);
-                    if(recording)
-                        strOriFile += strSensorFile;
-                    break;
-            }
-        }
-    }
-    */
     @Override
     protected void onResume() {
         super.onResume();
