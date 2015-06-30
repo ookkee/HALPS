@@ -81,6 +81,42 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
+
+        <EditText android:id="@+id/minslopeinput"
+            android:layout_weight="1"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:hint="minimum slope (float)"
+        />
+        <Button
+            android:layout_toLeftOf="@+id/minslopeinput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change"
+            android:onClick="changeMinSlope"
+        />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <EditText android:id="@+id/filterinput"
+            android:layout_weight="1"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:hint="filter amount 0-1 (float)"
+        />
+        <Button
+            android:layout_toLeftOf="@+id/filterinput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change"
+            android:onClick="changeFilter"
+        />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
         <Button
             android:id="@+id/delaynormal"
             android:layout_height="wrap_content"

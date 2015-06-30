@@ -13,6 +13,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -38,8 +39,9 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     private static int sensorDelay = SensorManager.SENSOR_DELAY_UI;
     MySensor[] mySensors = new MySensor[4];
     Queue<float[]> slopeQueue = new LinkedList<float[]>();
-    float minSlope = 2.0f;
+    float minSlope = 2.5f;
     TextView vwSensorInfo;
+    Location location;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -170,7 +172,7 @@ public class SensorDataActivity extends Activity implements SensorEventListener
 
     public void stepCalculation() {
         float[] newSlopeData = new float[2];
-        newSlopeData[0] = mySensors[3].currentTime;
+        newSlopeData[0] = mySensors[3].currentTime * (float)Math.pow(10,-9);
         newSlopeData[1] = mySensors[3].currentValues[0] +
             mySensors[3].currentValues[1] +
             mySensors[3].currentValues[2];
@@ -178,19 +180,20 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         if(slopeQueue.size() >= 5) {
             //slope = (y2-y1)/(x2-x1)
             float[] oldSlopeData = slopeQueue.remove();
-            float slope = (newSlopeData[1]-oldSlopeData[1])/(newSlopeData[0]-oldSlopeData[1]);
+            float slope = (newSlopeData[1]-oldSlopeData[1])/(newSlopeData[0]-oldSlopeData[0]);
+            vwSensorInfo.setText("Slope: " + slope + "\n");
             if(Math.abs(slope) >= minSlope) {
-                if(Math.signum(slope) > 0)
+                if(Math.signum(slope) > 0 && !valley)
                     peak = true;
-                else if(Math.signum(slope) < 0)
+                else if(Math.signum(slope) < 0 && peak)
                     valley = true;
                 if(peak && valley) {
                     stepsTaken += 1;
                     peak = false;
                     valley = false;
-                    vwSensorInfo.setText("Steps taken: " + stepsTaken + "\n");
                 }
             }
+            vwSensorInfo.append("Steps taken: " + stepsTaken + "\n");
         }
     }
 
@@ -401,6 +404,26 @@ public class SensorDataActivity extends Activity implements SensorEventListener
         }
         else {
             minRelevantAcc = Double.parseDouble(input.getText().toString());
+        }
+    }
+    /** Changes the minimum slope */
+    public void changeMinSlope(View view) {
+        EditText input = (EditText) findViewById(R.id.minslopeinput);
+        if(input.getText().toString() == null || input.getText().toString().isEmpty()) {
+            // Do nothing
+        }
+        else {
+            minSlope = Float.parseFloat(input.getText().toString());
+        }
+    }
+    /** Changes the filter coefficient */
+    public void changeFilter(View view) {
+        EditText input = (EditText) findViewById(R.id.filterinput);
+        if(input.getText().toString() == null || input.getText().toString().isEmpty()) {
+            // Do nothing
+        }
+        else {
+            MySensor.ALPHA = Float.parseFloat(input.getText().toString());
         }
     }
     /** Resets the step count */

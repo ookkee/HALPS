@@ -34,7 +34,7 @@ public class MySensor {
         currentValues = new float[]{0,0,0};
     }
 
-    static final float ALPHA = 0.25f; // ALPHA = 1 OR 0 -> no filtering
+    static float ALPHA = 0.25f; // ALPHA = 1 OR 0 -> no filtering
     public float[] lowPassFilter(float[] input, float[] output) {
         if(output == null) {
             System.out.println("Filter: output was null");
@@ -48,7 +48,7 @@ public class MySensor {
 
     public void newValues(float time, float[] val, boolean recording) {
 
-        currentValues = val;
+        currentValues = lowPassFilter(val, currentValues);
         currentTime = time;
 
         //check min and max values
