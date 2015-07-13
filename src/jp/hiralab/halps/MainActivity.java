@@ -21,4 +21,11 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this, SensorDataActivity.class);
         startActivity(intent);
     }
+
+    /** Starts the step and distance calculating app
+     */
+    public void startStepCounter(View view) {
+        Intent intent = new Intent(this, StepCounterActivity.class);
+        startActivity(intent);
+    }
 }

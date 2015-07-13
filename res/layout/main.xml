@@ -13,6 +13,11 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Step Counter"
+        android:onClick="startStepCounter" />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="@string/button_sensordata"
         android:onClick="startSensorData" />
 

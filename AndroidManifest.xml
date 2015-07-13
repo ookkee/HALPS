@@ -26,6 +26,10 @@
             android:name="SensorDataActivity"
             >
         </activity>
+        <activity
+            android:name="StepCounterActivity"
+            >
+        </activity>
     </application>
 
 </manifest>

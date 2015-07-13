@@ -8,7 +8,7 @@ public class MySensor {
     // Sensor related variables
     private Sensor sensor;
     private float[] min, max;
-    public float[] currentValues;
+    public float[] currentValues, filteredValues;
     public float currentTime;
 
     // data displaying related variables
@@ -48,7 +48,8 @@ public class MySensor {
 
     public void newValues(float time, float[] val, boolean recording) {
 
-        currentValues = lowPassFilter(val, currentValues);
+        currentValues = val;
+        filteredValues = lowPassFilter(val, filteredValues);
         currentTime = time;
 
         //check min and max values
@@ -65,13 +66,13 @@ public class MySensor {
         
         if(recording) {
             dataCsvFiltered += time + ";" + 
+                filteredValues[0] + ";" + 
+                filteredValues[1] + ";" +
+                filteredValues[2] + "\n";
+            dataCsv += time + ";" + 
                 currentValues[0] + ";" + 
                 currentValues[1] + ";" +
                 currentValues[2] + "\n";
-            dataCsv += time + ";" + 
-                val[0] + ";" + 
-                val[1] + ";" +
-                val[2] + "\n";
         }
     }
 

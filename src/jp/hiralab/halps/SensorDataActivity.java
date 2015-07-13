@@ -173,27 +173,26 @@ public class SensorDataActivity extends Activity implements SensorEventListener
     public void stepCalculation() {
         float[] newSlopeData = new float[2];
         newSlopeData[0] = mySensors[3].currentTime * (float)Math.pow(10,-9);
-        newSlopeData[1] = mySensors[3].currentValues[0] +
-            mySensors[3].currentValues[1] +
-            mySensors[3].currentValues[2];
+        newSlopeData[1] = mySensors[3].filteredValues[0] +
+            mySensors[3].filteredValues[1] +
+            mySensors[3].filteredValues[2];
         slopeQueue.add(newSlopeData);
         if(slopeQueue.size() >= 5) {
             //slope = (y2-y1)/(x2-x1)
             float[] oldSlopeData = slopeQueue.remove();
             float slope = (newSlopeData[1]-oldSlopeData[1])/(newSlopeData[0]-oldSlopeData[0]);
             vwSensorInfo.setText("Slope: " + slope + "\n");
-            if(Math.abs(slope) >= minSlope) {
-                if(Math.signum(slope) > 0 && !valley)
-                    peak = true;
-                else if(Math.signum(slope) < 0 && peak)
-                    valley = true;
-                if(peak && valley) {
-                    stepsTaken += 1;
-                    peak = false;
-                    valley = false;
-                }
+            if(slope >= minSlope && !valley) 
+                peak = true;
+            else if(slope * -1 >= minSlope && peak && newSlopeData[1]<-1)
+                valley = true;
+            if(peak && valley) {
+                stepsTaken += 1;
+                peak = false;
+                valley = false;
             }
             vwSensorInfo.append("Steps taken: " + stepsTaken + "\n");
+            vwSensorInfo.append("Peak: " + peak + ", valley: " + valley + "\n");
         }
     }
 
