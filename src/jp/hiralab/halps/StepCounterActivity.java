@@ -22,33 +22,14 @@ public class StepCounterActivity extends Activity implements SensorEventListener
     private static final int SEN_DELAY = SensorManager.SENSOR_DELAY_UI;
 
     private SensorManager sm; 
-    private boolean peak, valley, userMoving;
+    private boolean peak, valley;
     private Queue<float[]> slopeQueue = new LinkedList<float[]>();
     private SensorData[] sensors = new SensorData[3];
     private double stepLength;
-    private int stepsTaken, actualSteps;
+    private int stepsTaken;
     private float distanceTraveled;
 
     private TextView vwStepsTaken;
-
-    Timer timer = new Timer();
-    TimerTask task = new TimerTask() {
-        @Override
-        public void run() {
-            // TODO
-            int steps = stepsTaken; //separate variable to avoid interfering with threads
-
-            if(steps >= 2) {
-                if(!userMoving)
-                    actualSteps += steps;
-                userMoving = true;
-            }
-            else {
-                userMoving = false;
-            }
-            stepsTaken -= steps;
-        }
-    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -79,16 +60,12 @@ public class StepCounterActivity extends Activity implements SensorEventListener
 
         stepLength = 0;
         stepsTaken = 0;
-        stepsTakenOld = 0;
-        actualSteps = 0;
         distanceTraveled = 0;
         peak = false;
         valley = false;
-        userMoving = false;
 
         vwStepsTaken = (TextView) findViewById(R.id.stepstaken);
 
-        timer.schedule(task, 3*1000, 3*1000);
     }
 
     @Override
@@ -138,13 +115,10 @@ public class StepCounterActivity extends Activity implements SensorEventListener
             else if(slope * -1 >= MIN_SLOPE && peak && newSlopeData[1] < -1.5)
                 valley = true;
             if(peak && valley) {
-                if(userMoving)
-                    actualSteps++;
-                else
-                    stepsTaken++;
+                stepsTaken++;
                 peak = false;
                 valley = false;
-                vwStepsTaken.setText("Steps taken: " + actualSteps);
+                vwStepsTaken.setText("Steps taken: " + stepsTaken);
             }
         }
     }
