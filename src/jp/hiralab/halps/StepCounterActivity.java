@@ -26,7 +26,7 @@ public class StepCounterActivity extends Activity implements SensorEventListener
     private Queue<float[]> slopeQueue = new LinkedList<float[]>();
     private SensorData[] sensors = new SensorData[3];
     private double stepLength;
-    private int stepsTaken, stepsTakenOld, actualSteps;
+    private int stepsTaken, actualSteps;
     private float distanceTraveled;
 
     private TextView vwStepsTaken;
@@ -38,16 +38,15 @@ public class StepCounterActivity extends Activity implements SensorEventListener
             // TODO
             int steps = stepsTaken; //separate variable to avoid interfering with threads
 
-            if(steps - stepsTakenOld >= 3) {
+            if(steps >= 2) {
                 if(!userMoving)
-                    actualSteps += steps - stepsTakenOld;
+                    actualSteps += steps;
                 userMoving = true;
             }
             else {
                 userMoving = false;
-                stepsTaken = stepsTakenOld;
             }
-            stepsTakenOld = steps;
+            stepsTaken -= steps;
         }
     };
 
@@ -139,9 +138,10 @@ public class StepCounterActivity extends Activity implements SensorEventListener
             else if(slope * -1 >= MIN_SLOPE && peak && newSlopeData[1] < -1.5)
                 valley = true;
             if(peak && valley) {
-                stepsTaken += 1;
                 if(userMoving)
-                    actualSteps += 1;
+                    actualSteps++;
+                else
+                    stepsTaken++;
                 peak = false;
                 valley = false;
                 vwStepsTaken.setText("Steps taken: " + actualSteps);
