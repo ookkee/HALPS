@@ -9,16 +9,27 @@
     <TextView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/hello" />
+        android:text="Press Step Counter to start the app"
+        android:textSize="16sp"
+        android:gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="20dp"
+    />
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="Step Counter"
-        android:onClick="startStepCounter" />
+        android:onClick="startStepCounter"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+    />
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/button_sensordata"
-        android:onClick="startSensorData" />
+        android:onClick="startSensorData"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+    />
 
 </LinearLayout>

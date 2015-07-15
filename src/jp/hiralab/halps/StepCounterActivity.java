@@ -1,9 +1,8 @@
 package jp.hiralab.halps;
 
+import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import android.app.Activity;
 import android.hardware.Sensor;
@@ -11,6 +10,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import jp.hiralab.halps.SensorData;
@@ -30,6 +31,9 @@ public class StepCounterActivity extends Activity implements SensorEventListener
     private float distanceTraveled;
 
     private TextView vwStepsTaken;
+    private TextView vwDistanceTraveled;
+
+    private DecimalFormat f = new DecimalFormat("#,##0.0");
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -65,6 +69,7 @@ public class StepCounterActivity extends Activity implements SensorEventListener
         valley = false;
 
         vwStepsTaken = (TextView) findViewById(R.id.stepstaken);
+        vwDistanceTraveled = (TextView) findViewById(R.id.distancetraveled);
 
     }
 
@@ -112,14 +117,26 @@ public class StepCounterActivity extends Activity implements SensorEventListener
             float slope = (newSlopeData[1]-oldSlopeData[1])/(newSlopeData[0]-oldSlopeData[0]);
             if(slope >= MIN_SLOPE && !valley) 
                 peak = true;
-            else if(slope * -1 >= MIN_SLOPE && peak && newSlopeData[1] < -1.5)
+            else if(slope * -1 >= MIN_SLOPE && peak && newSlopeData[1] < -0.33)
                 valley = true;
             if(peak && valley) {
                 stepsTaken++;
+                distanceTraveled = (float)stepLength * stepsTaken;
                 peak = false;
                 valley = false;
-                vwStepsTaken.setText("Steps taken: " + stepsTaken);
+                vwStepsTaken.setText(String.valueOf(stepsTaken));
+                vwDistanceTraveled.setText(f.format(distanceTraveled) + " m");
             }
+        }
+    }
+
+    public void setStepLength(View view) {
+        EditText input = (EditText) findViewById(R.id.steplengthinput);
+        if(!input.getText().toString().isEmpty() &&
+                input.getText().toString() != null) {
+            stepLength = Double.parseDouble(input.getText().toString());
+            input.setHint(input.getText().toString() + ", 0.4 * height");
+            input.setText("");
         }
     }
 
