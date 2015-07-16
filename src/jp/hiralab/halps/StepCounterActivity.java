@@ -134,9 +134,14 @@ public class StepCounterActivity extends Activity implements SensorEventListener
         EditText input = (EditText) findViewById(R.id.steplengthinput);
         if(!input.getText().toString().isEmpty() &&
                 input.getText().toString() != null) {
-            stepLength = Double.parseDouble(input.getText().toString());
-            input.setHint(input.getText().toString() + ", 0.4 * height");
-            input.setText("");
+            try{
+                stepLength = Double.parseDouble(input.getText().toString().replaceAll(",","."));
+                input.setHint(input.getText().toString().replaceAll(",",".") + ", 0.4 * height");
+                input.setText("");
+            }catch(NumberFormatException e){
+                System.out.println("Could not parse " + input.getText().toString().replaceAll(",",".") + " to double!");
+                input.setText("");
+            }
         }
     }
 
